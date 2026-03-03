@@ -6,6 +6,5 @@ import com.example.Authify.io.ProfileResponse;
 
 public interface ProfileService {
     public ProfileResponse createProfile(ProfileRequest request);
-
-
+    Boolean existsByEmail(String email);
 }

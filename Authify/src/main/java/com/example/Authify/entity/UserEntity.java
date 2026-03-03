@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 @Data
 @Builder
 @Entity
-@Table(name="Authify")
+@Table(name="tbl_users")
 public class UserEntity {
 
     @Id
@@ -30,7 +30,7 @@ public class UserEntity {
     private String verifyOtp;
     private Boolean isAccountVerified;
     private Long verifyOtpExpireAt;
-    private Long restOtpExpireAt;
+    private Long resetOtpExpireAt;
 
     @CreationTimestamp
     @Column(updatable = false)
