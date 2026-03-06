@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProfileRequest {
-
     @NotNull(message = "Name Should Not be Null")
     private String name;
     @Email

@@ -1,9 +1,13 @@
 package com.example.Authify.controller;
 
 import com.example.Authify.io.AuthRequest;
+import com.example.Authify.io.AuthResponse;
 import com.example.Authify.service.AppUserDetailsService;
+import com.example.Authify.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -12,16 +16,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final AppUserDetailsService appUserDetailsService;
+    private final JwtUtil jwtUtil ;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
@@ -30,13 +35,16 @@ public class AuthController {
             authenticate(request.getEmail(), request.getPassword());
 
             final UserDetails userDetails =
-                    appUserDetailsService.loadUserByUsernname(request.getEmail());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("error", false);
-            response.put("message", "Login successful");
-
-            return ResponseEntity.ok(response);
+                    appUserDetailsService.loadUserByUsername(request.getEmail());
+            final String jwtToken = jwtUtil.generateToken(userDetails);
+            ResponseCookie cookie = ResponseCookie.from("jwt",jwtToken)
+                    .httpOnly(true)
+                    .path("/")
+                    .maxAge(Duration.ofDays(1))
+                    .sameSite("Strict")
+                    .build();
+            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(new AuthResponse(request.getEmail(), jwtToken));
 
         } catch (BadCredentialsException ex) {
 
@@ -55,7 +63,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 
         } catch (Exception ex) {
-
+            ex.printStackTrace();
             Map<String, Object> error = new HashMap<>();
             error.put("error", true);
             error.put("message", "Authentication failed");
